@@ -115,8 +115,34 @@ function getDemoContent(): { title: string; content: string } {
       <h2>Introduction</h2>
       <p>Reading is one of humanity's most powerful tools for learning and growth. This demo article showcases the reader functionality with a clean, distraction-free interface.</p>
       
+      <pre>
+Chapter One: The Beginning
+This is the first chapter of our story.
+It has multiple lines
+that should be reflowed into a single paragraph.
+
+But when there's an empty line like above,
+it should create a new paragraph.
+
+This is the third paragraph in chapter one.
+More text here that flows together
+on multiple lines.
+      </pre>
+      
       <h2>The Benefits of Reading</h2>
       <p>Reading provides numerous cognitive benefits. It improves vocabulary, enhances focus, reduces stress, and expands knowledge. Whether you're reading fiction or non-fiction, the act of reading stimulates your brain and keeps it active.</p>
+      
+      <pre>
+Chapter Two: The Middle
+Chapter two begins here.
+This is also a multi-line chapter
+that needs text reflow.
+
+Another paragraph in chapter two
+with text that flows
+across multiple lines
+smoothly.
+      </pre>
       
       <p>Studies have shown that regular reading can improve memory, analytical thinking, and even empathy. When we read stories, we experience different perspectives and emotions, which helps us understand others better.</p>
       
@@ -128,15 +154,27 @@ function getDemoContent(): { title: string; content: string } {
         <li>Adjustable font size for comfort</li>
         <li>Black text on white background for optimal contrast</li>
         <li>Automatic position saving to resume where you left off</li>
+        <li>Chapter navigation for PRE-formatted content</li>
       </ul>
+      
+      <pre>
+Chapter Three: The End
+The final chapter.
+Short and sweet.
+
+With a second paragraph
+that also has some
+multi-line text.
+
+And a third paragraph to demonstrate
+the paragraph preservation feature
+working correctly.
+      </pre>
       
       <h2>How to Use</h2>
       <p>To use this reader, simply enter a URL on the home page. The system will fetch the content, extract the main article, and present it in this clean format. You can adjust the font size using the controls at the top of the page.</p>
       
       <p>Your reading position is automatically saved in your browser's local storage, so you can always pick up where you left off when you return to an article.</p>
-      
-      <h2>Typography and Design</h2>
-      <p>The choice of Garamond as the primary font is intentional. This classic serif typeface is known for its readability and elegance, making it perfect for long-form reading. The generous line height and spacing ensure that your eyes can move smoothly through the text without strain.</p>
       
       <h2>Conclusion</h2>
       <p>We hope you enjoy this clean reading experience. Whether you're reading articles, blog posts, or long-form content, this reader mode is designed to make your reading sessions more pleasant and focused.</p>
