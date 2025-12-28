@@ -13,38 +13,30 @@ export default function Home() {
   const [recentUrls, setRecentUrls] = useState<string[]>([]);
   const router = useRouter();
 
+  // Helper function to get stored URLs from localStorage
+  const getStoredUrls = (): string[] => {
+    if (typeof window === 'undefined') return [];
+    
+    const stored = localStorage.getItem(RECENT_URLS_KEY);
+    if (!stored) return [];
+    
+    try {
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      // Ignore invalid JSON
+      return [];
+    }
+  };
+
   // Load recent URLs from localStorage on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(RECENT_URLS_KEY);
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed)) {
-            setRecentUrls(parsed);
-          }
-        } catch {
-          // Ignore invalid JSON
-        }
-      }
-    }
+    setRecentUrls(getStoredUrls());
   }, []);
 
   const saveRecentUrl = (url: string) => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(RECENT_URLS_KEY);
-      let urls: string[] = [];
-      
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed)) {
-            urls = parsed;
-          }
-        } catch {
-          // Ignore invalid JSON
-        }
-      }
+      let urls = getStoredUrls();
 
       // Remove the URL if it already exists (to move it to the front)
       urls = urls.filter(u => u !== url);
@@ -122,9 +114,9 @@ export default function Home() {
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <h3 className="text-sm font-medium text-gray-700 mb-3">Recent URLs</h3>
               <div className="space-y-2">
-                {recentUrls.map((recentUrl, index) => (
+                {recentUrls.map((recentUrl) => (
                   <button
-                    key={index}
+                    key={recentUrl}
                     type="button"
                     onClick={() => handleRecentUrlClick(recentUrl)}
                     className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors truncate"
