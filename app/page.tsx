@@ -1,13 +1,64 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+
+const RECENT_URLS_KEY = 'reader-recent-urls';
+const MAX_RECENT_URLS = 10;
 
 export default function Home() {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [recentUrls, setRecentUrls] = useState<string[]>([]);
   const router = useRouter();
+
+  // Load recent URLs from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(RECENT_URLS_KEY);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            setRecentUrls(parsed);
+          }
+        } catch {
+          // Ignore invalid JSON
+        }
+      }
+    }
+  }, []);
+
+  const saveRecentUrl = (url: string) => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(RECENT_URLS_KEY);
+      let urls: string[] = [];
+      
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            urls = parsed;
+          }
+        } catch {
+          // Ignore invalid JSON
+        }
+      }
+
+      // Remove the URL if it already exists (to move it to the front)
+      urls = urls.filter(u => u !== url);
+      
+      // Add the new URL to the front
+      urls.unshift(url);
+      
+      // Keep only the last 10 URLs
+      urls = urls.slice(0, MAX_RECENT_URLS);
+      
+      localStorage.setItem(RECENT_URLS_KEY, JSON.stringify(urls));
+      setRecentUrls(urls);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,11 +79,19 @@ export default function Home() {
       }
 
       const data = await response.json();
+      
+      // Save URL to recent URLs
+      saveRecentUrl(url);
+      
       router.push(`/reader?id=${data.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       setLoading(false);
     }
+  };
+
+  const handleRecentUrlClick = (recentUrl: string) => {
+    setUrl(recentUrl);
   };
 
   return (
@@ -58,6 +117,25 @@ export default function Home() {
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-black text-black"
             />
           </div>
+
+          {recentUrls.length > 0 && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Recent URLs</h3>
+              <div className="space-y-2">
+                {recentUrls.map((recentUrl, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => handleRecentUrlClick(recentUrl)}
+                    className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors truncate"
+                    title={recentUrl}
+                  >
+                    {recentUrl}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="text-red-600 text-sm">
