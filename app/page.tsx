@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 const RECENT_URLS_KEY = 'reader-recent-urls';
+const URL_TO_ID_KEY = 'reader-url-to-id';
 const MAX_RECENT_URLS = 10;
 
 // Helper function to get stored URLs from localStorage
@@ -20,6 +21,30 @@ const getStoredUrls = (): string[] => {
     // Ignore invalid JSON
     return [];
   }
+};
+
+// Helper function to get URL to ID mapping
+const getUrlToIdMapping = (): Record<string, string> => {
+  if (typeof window === 'undefined') return {};
+  
+  const stored = localStorage.getItem(URL_TO_ID_KEY);
+  if (!stored) return {};
+  
+  try {
+    const parsed = JSON.parse(stored);
+    return typeof parsed === 'object' && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
+// Helper function to save URL to ID mapping
+const saveUrlToIdMapping = (url: string, id: string) => {
+  if (typeof window === 'undefined') return;
+  
+  const mapping = getUrlToIdMapping();
+  mapping[url] = id;
+  localStorage.setItem(URL_TO_ID_KEY, JSON.stringify(mapping));
 };
 
 export default function Home() {
@@ -75,6 +100,9 @@ export default function Home() {
       // Save URL to recent URLs
       saveRecentUrl(url);
       
+      // Save URL to ID mapping
+      saveUrlToIdMapping(url, data.id);
+      
       router.push(`/reader?id=${data.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -83,7 +111,17 @@ export default function Home() {
   };
 
   const handleRecentUrlClick = (recentUrl: string) => {
-    setUrl(recentUrl);
+    // Check if this URL has been previously downloaded
+    const mapping = getUrlToIdMapping();
+    const existingId = mapping[recentUrl];
+    
+    if (existingId) {
+      // Navigate directly to the reader with the saved ID
+      router.push(`/reader?id=${existingId}`);
+    } else {
+      // Fill the input field so user can fetch it
+      setUrl(recentUrl);
+    }
   };
 
   return (
