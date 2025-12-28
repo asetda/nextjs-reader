@@ -1,8 +1,9 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import DOMPurify from 'isomorphic-dompurify';
 
 function ReaderContent() {
   const searchParams = useSearchParams();
@@ -76,6 +77,16 @@ function ReaderContent() {
     setFontSize(newSize);
     localStorage.setItem('reader-font-size', String(newSize));
   };
+
+  // Sanitize HTML content to prevent XSS attacks
+  const sanitizedContent = useMemo(() => {
+    if (!content) return '';
+    return DOMPurify.sanitize(content.content, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'blockquote', 'pre', 'code', 'img', 'div', 'span'],
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class'],
+      ALLOW_DATA_ATTR: false,
+    });
+  }, [content]);
 
   if (loading) {
     return (
@@ -156,7 +167,7 @@ function ReaderContent() {
               fontSize: `${fontSize}px`,
               lineHeight: '1.8',
             }}
-            dangerouslySetInnerHTML={{ __html: content.content }}
+            dangerouslySetInnerHTML={{ __html: sanitizedContent }}
           />
         </article>
       </main>

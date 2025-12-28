@@ -8,6 +8,59 @@ function generateId(): string {
   return Math.random().toString(36).substring(2, 15);
 }
 
+// SSRF protection: Check if URL points to private/internal IP ranges
+function isPrivateIP(hostname: string): boolean {
+  // Check for localhost
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
+    return true;
+  }
+  
+  // Check for private IP ranges
+  const ipv4Regex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+  const match = hostname.match(ipv4Regex);
+  
+  if (match) {
+    const [, a, b] = match.map(Number);
+    
+    // 10.0.0.0/8
+    if (a === 10) return true;
+    
+    // 172.16.0.0/12
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    
+    // 192.168.0.0/16
+    if (a === 192 && b === 168) return true;
+    
+    // 169.254.0.0/16 (link-local)
+    if (a === 169 && b === 254) return true;
+    
+    // 127.0.0.0/8 (loopback)
+    if (a === 127) return true;
+  }
+  
+  return false;
+}
+
+function validateURL(url: string): { valid: boolean; error?: string } {
+  try {
+    const parsed = new URL(url);
+    
+    // Only allow HTTP and HTTPS
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return { valid: false, error: 'Only HTTP and HTTPS protocols are allowed' };
+    }
+    
+    // Check for private IPs
+    if (isPrivateIP(parsed.hostname)) {
+      return { valid: false, error: 'Access to private/internal IPs is not allowed' };
+    }
+    
+    return { valid: true };
+  } catch {
+    return { valid: false, error: 'Invalid URL format' };
+  }
+}
+
 function extractMainContent(html: string): { title: string; content: string } {
   const $ = cheerio.load(html);
 
@@ -101,11 +154,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
     }
 
-    // Validate URL
-    try {
-      new URL(url);
-    } catch {
-      return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
+    // Validate URL and check for SSRF
+    const validation = validateURL(url);
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
     let title: string;
