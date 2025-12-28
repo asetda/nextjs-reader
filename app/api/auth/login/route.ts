@@ -1,8 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createHash } from 'crypto';
+import { createHash, createHmac, randomBytes } from 'crypto';
 
 const EXPECTED_USERNAME = 'abc';
 const EXPECTED_PASSWORD_HASH = 'd3981f82aea12b4b0863a8e4c22ddf7fc8102c5582ed114352b9f9c9d429974f';
+
+// Secret for signing tokens (in production, use environment variable)
+const TOKEN_SECRET = process.env.TOKEN_SECRET || 'default-secret-change-in-production';
+
+// Generate a secure session token
+function generateSessionToken(): string {
+  const randomData = randomBytes(32).toString('hex');
+  const timestamp = Date.now().toString();
+  const data = `${randomData}:${timestamp}`;
+  
+  // Create HMAC signature
+  const signature = createHmac('sha256', TOKEN_SECRET)
+    .update(data)
+    .digest('hex');
+  
+  return `${data}:${signature}`;
+}
 
 function hashPassword(password: string): string {
   return createHash('sha256').update(password).digest('hex');
@@ -33,8 +50,10 @@ export async function POST(request: NextRequest) {
     // Create response with auth cookie
     const response = NextResponse.json({ success: true });
     
-    // Set authentication cookie
-    response.cookies.set('auth-token', 'authenticated', {
+    // Set authentication cookie with secure signed token
+    const sessionToken = generateSessionToken();
+    
+    response.cookies.set('auth-token', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -51,3 +70,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export { TOKEN_SECRET };
