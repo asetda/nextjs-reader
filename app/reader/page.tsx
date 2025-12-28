@@ -81,8 +81,12 @@ function ReaderContent() {
   // Sanitize HTML content to prevent XSS attacks
   const sanitizedContent = useMemo(() => {
     if (!content) return '';
-    return DOMPurify.sanitize(content.content, {
-      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'blockquote', 'pre', 'code', 'img', 'div', 'span'],
+    
+    // First, convert <pre> tags to <p> tags before sanitization
+    const htmlContent = content.content.replace(/<pre\b[^>]*>/gi, '<p>').replace(/<\/pre>/gi, '</p>');
+    
+    return DOMPurify.sanitize(htmlContent, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'blockquote', 'code', 'img', 'div', 'span'],
       ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class'],
       ALLOW_DATA_ATTR: false,
     });
