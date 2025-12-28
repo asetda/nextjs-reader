@@ -78,19 +78,56 @@ function ReaderContent() {
     localStorage.setItem('reader-font-size', String(newSize));
   };
 
+  // Process PRE blocks into chapters and extract chapter titles
+  const { processedContent, chapters } = useMemo(() => {
+    if (!content) return { processedContent: '', chapters: [] };
+    
+    const chapterList: { id: string; title: string }[] = [];
+    let chapterIndex = 0;
+    
+    // Process <pre> blocks into chapters
+    const htmlContent = content.content.replace(/<pre\b[^>]*>([\s\S]*?)<\/pre>/gi, (match, preContent) => {
+      chapterIndex++;
+      const chapterId = `chapter-${chapterIndex}`;
+      
+      // Extract first line as potential chapter title (first 50 chars or until newline)
+      const firstLineMatch = preContent.trim().match(/^([^\n]{1,50})/);
+      const chapterTitle = firstLineMatch ? firstLineMatch[1].trim() : `Chapter ${chapterIndex}`;
+      
+      chapterList.push({ id: chapterId, title: chapterTitle });
+      
+      // Process the content within the PRE block:
+      // 1. Preserve paragraph breaks (double newlines or more)
+      // 2. Convert single line breaks to spaces for text reflow
+      const processedPre = preContent
+        // First, normalize line endings
+        .replace(/\r\n/g, '\n')
+        // Mark paragraph breaks (double newlines) with a placeholder
+        .replace(/\n\s*\n/g, '<!PARAGRAPH_BREAK!>')
+        // Replace single newlines with spaces for reflow
+        .replace(/\n/g, ' ')
+        // Replace multiple spaces with single space
+        .replace(/  +/g, ' ')
+        // Convert paragraph breaks back to HTML
+        .replace(/<!PARAGRAPH_BREAK!>/g, '</p><p>');
+      
+      // Wrap in a chapter div with ID for navigation
+      return `<div class="chapter" id="${chapterId}"><h2>${chapterTitle}</h2><p>${processedPre}</p></div>`;
+    });
+    
+    return { processedContent: htmlContent, chapters: chapterList };
+  }, [content]);
+
   // Sanitize HTML content to prevent XSS attacks
   const sanitizedContent = useMemo(() => {
-    if (!content) return '';
+    if (!processedContent) return '';
     
-    // First, convert <pre> tags to <p> tags before sanitization
-    const htmlContent = content.content.replace(/<pre\b[^>]*>/gi, '<p>').replace(/<\/pre>/gi, '</p>');
-    
-    return DOMPurify.sanitize(htmlContent, {
+    return DOMPurify.sanitize(processedContent, {
       ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'blockquote', 'code', 'img', 'div', 'span'],
-      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class'],
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id'],
       ALLOW_DATA_ATTR: false,
     });
-  }, [content]);
+  }, [processedContent]);
 
   if (loading) {
     return (
@@ -112,6 +149,20 @@ function ReaderContent() {
       </div>
     );
   }
+
+  const scrollToChapter = (chapterId: string) => {
+    const element = document.getElementById(chapterId);
+    if (element) {
+      const headerOffset = 100; // Account for fixed header
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - headerOffset;
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth',
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -142,6 +193,27 @@ function ReaderContent() {
         </div>
       </div>
 
+      {/* Chapter navigation sidebar (if chapters exist) */}
+      {chapters.length > 0 && (
+        <div className="fixed left-4 top-32 hidden lg:block">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 max-w-xs">
+            <h3 className="text-sm font-bold mb-2 text-gray-700">Chapters</h3>
+            <nav className="space-y-1 max-h-96 overflow-y-auto">
+              {chapters.map((chapter) => (
+                <button
+                  key={chapter.id}
+                  onClick={() => scrollToChapter(chapter.id)}
+                  className="block w-full text-left text-sm text-gray-600 hover:text-black hover:bg-gray-50 px-2 py-1 rounded transition-colors"
+                  title={chapter.title}
+                >
+                  {chapter.title.length > 30 ? `${chapter.title.substring(0, 30)}...` : chapter.title}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+      )}
+
       {/* Main content */}
       <main className="max-w-3xl mx-auto px-6 pt-24 pb-16">
         <article>
@@ -164,6 +236,27 @@ function ReaderContent() {
               {content.url}
             </a>
           </div>
+          
+          {/* Mobile chapter navigation */}
+          {chapters.length > 0 && (
+            <details className="lg:hidden mb-6 border border-gray-200 rounded-lg">
+              <summary className="cursor-pointer px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg">
+                <span className="text-sm font-bold text-gray-700">Chapters ({chapters.length})</span>
+              </summary>
+              <nav className="p-4 space-y-1">
+                {chapters.map((chapter) => (
+                  <button
+                    key={chapter.id}
+                    onClick={() => scrollToChapter(chapter.id)}
+                    className="block w-full text-left text-sm text-gray-600 hover:text-black hover:bg-gray-50 px-2 py-1 rounded transition-colors"
+                  >
+                    {chapter.title}
+                  </button>
+                ))}
+              </nav>
+            </details>
+          )}
+          
           <div
             className="prose max-w-none"
             style={{
