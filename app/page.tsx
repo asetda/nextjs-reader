@@ -6,28 +6,28 @@ import { useRouter } from 'next/navigation';
 const RECENT_URLS_KEY = 'reader-recent-urls';
 const MAX_RECENT_URLS = 10;
 
+// Helper function to get stored URLs from localStorage
+const getStoredUrls = (): string[] => {
+  if (typeof window === 'undefined') return [];
+  
+  const stored = localStorage.getItem(RECENT_URLS_KEY);
+  if (!stored) return [];
+  
+  try {
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    // Ignore invalid JSON
+    return [];
+  }
+};
+
 export default function Home() {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [recentUrls, setRecentUrls] = useState<string[]>([]);
   const router = useRouter();
-
-  // Helper function to get stored URLs from localStorage
-  const getStoredUrls = (): string[] => {
-    if (typeof window === 'undefined') return [];
-    
-    const stored = localStorage.getItem(RECENT_URLS_KEY);
-    if (!stored) return [];
-    
-    try {
-      const parsed = JSON.parse(stored);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      // Ignore invalid JSON
-      return [];
-    }
-  };
 
   // Load recent URLs from localStorage on mount
   useEffect(() => {
