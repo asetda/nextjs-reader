@@ -82,6 +82,8 @@ function ReaderContent() {
   const { processedContent, chapters } = useMemo(() => {
     if (!content) return { processedContent: '', chapters: [] };
     
+    const MAX_CHAPTER_TITLE_LENGTH = 50;
+    const PARAGRAPH_BREAK_PLACEHOLDER = '\u0000PARAGRAPH_BREAK\u0000';
     const chapterList: { id: string; title: string }[] = [];
     let chapterIndex = 0;
     
@@ -90,8 +92,8 @@ function ReaderContent() {
       chapterIndex++;
       const chapterId = `chapter-${chapterIndex}`;
       
-      // Extract first line as potential chapter title (first 50 chars or until newline)
-      const firstLineMatch = preContent.trim().match(/^([^\n]{1,50})/);
+      // Extract first line as potential chapter title
+      const firstLineMatch = preContent.trim().match(new RegExp(`^([^\n]{1,${MAX_CHAPTER_TITLE_LENGTH}})`));
       const chapterTitle = firstLineMatch ? firstLineMatch[1].trim() : `Chapter ${chapterIndex}`;
       
       chapterList.push({ id: chapterId, title: chapterTitle });
@@ -102,17 +104,17 @@ function ReaderContent() {
       const processedPre = preContent
         // First, normalize line endings
         .replace(/\r\n/g, '\n')
-        // Mark paragraph breaks (double newlines) with a placeholder
-        .replace(/\n\s*\n/g, '<!PARAGRAPH_BREAK!>')
+        // Mark paragraph breaks (double newlines) with a unique placeholder
+        .replace(/\n\s*\n/g, PARAGRAPH_BREAK_PLACEHOLDER)
         // Replace single newlines with spaces for reflow
         .replace(/\n/g, ' ')
         // Replace multiple spaces with single space
         .replace(/  +/g, ' ')
         // Convert paragraph breaks back to HTML
-        .replace(/<!PARAGRAPH_BREAK!>/g, '</p><p>');
+        .replace(new RegExp(PARAGRAPH_BREAK_PLACEHOLDER, 'g'), '</p><p>');
       
-      // Wrap in a chapter div with ID for navigation
-      return `<div class="chapter" id="${chapterId}"><h2>${chapterTitle}</h2><p>${processedPre}</p></div>`;
+      // Wrap in a chapter div with ID for navigation (use className for React)
+      return `<div className="chapter" id="${chapterId}"><h2>${chapterTitle}</h2><p>${processedPre}</p></div>`;
     });
     
     return { processedContent: htmlContent, chapters: chapterList };
