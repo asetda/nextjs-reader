@@ -164,7 +164,8 @@ export async function POST(request: NextRequest) {
     let content: string;
 
     // Check if this is a demo URL
-    if (url.toLowerCase().includes('demo') || url.includes('example.com')) {
+    const parsedUrl = new URL(url);
+    if (url.toLowerCase().includes('demo') || parsedUrl.hostname === 'example.com' || parsedUrl.hostname.endsWith('.example.com')) {
       const demo = getDemoContent();
       title = demo.title;
       content = demo.content;
