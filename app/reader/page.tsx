@@ -5,6 +5,16 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import DOMPurify from 'isomorphic-dompurify';
 
+// Font configuration
+const FONT_STACKS: { [key: string]: string } = {
+  'Garamond': 'Garamond, serif',
+  'Georgia': 'Georgia, serif',
+  'Palatino': 'Palatino, "Palatino Linotype", "Book Antiqua", serif',
+  'Iowan': 'Iowan Old Style, Palatino, "Palatino Linotype", "Book Antiqua", serif',
+};
+
+const AVAILABLE_FONTS = ['Garamond', 'Georgia', 'Palatino', 'Iowan'] as const;
+
 function ReaderContent() {
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
@@ -94,13 +104,7 @@ function ReaderContent() {
 
   // Map font names to CSS font stacks
   const getFontStack = (font: string) => {
-    const fontStacks: { [key: string]: string } = {
-      'Garamond': 'Garamond, serif',
-      'Georgia': 'Georgia, serif',
-      'Palatino': 'Palatino, "Palatino Linotype", "Book Antiqua", serif',
-      'Iowan': 'Iowan Old Style, Palatino, "Palatino Linotype", "Book Antiqua", serif',
-    };
-    return fontStacks[font] || fontStacks['Garamond'];
+    return FONT_STACKS[font] || FONT_STACKS['Garamond'];
   };
 
   // Process PRE blocks into chapters and extract chapter titles
@@ -221,7 +225,7 @@ function ReaderContent() {
           </div>
           <div className="flex items-center justify-center gap-2">
             <span className="text-sm text-gray-600">Font:</span>
-            {['Garamond', 'Georgia', 'Palatino', 'Iowan'].map((font) => (
+            {AVAILABLE_FONTS.map((font) => (
               <button
                 key={font}
                 onClick={() => handleFontFamilyChange(font)}
