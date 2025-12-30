@@ -14,6 +14,7 @@ const FONT_STACKS: { [key: string]: string } = {
 };
 
 const AVAILABLE_FONTS = ['Garamond', 'Georgia', 'Palatino', 'Iowan'] as const;
+const DEFAULT_FONT = 'Garamond';
 
 function ReaderContent() {
   const searchParams = useSearchParams();
@@ -36,9 +37,9 @@ function ReaderContent() {
   const [fontFamily, setFontFamily] = useState(() => {
     if (typeof window !== 'undefined') {
       const savedFont = localStorage.getItem('reader-font-family');
-      return savedFont || 'Garamond';
+      return savedFont || DEFAULT_FONT;
     }
-    return 'Garamond';
+    return DEFAULT_FONT;
   });
 
   useEffect(() => {
@@ -104,7 +105,7 @@ function ReaderContent() {
 
   // Map font names to CSS font stacks
   const getFontStack = (font: string) => {
-    return FONT_STACKS[font] || FONT_STACKS['Garamond'];
+    return FONT_STACKS[font] || FONT_STACKS[DEFAULT_FONT];
   };
 
   // Process PRE blocks into chapters and extract chapter titles
