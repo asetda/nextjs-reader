@@ -39,10 +39,3 @@ details summary::-webkit-details-marker {
 details summary::marker {
   display: none;
 }
-
-/* Improve touch targets for mobile Safari */
-@supports (-webkit-touch-callout: none) {
-  details summary {
-    min-height: 44px;
-  }
-}
