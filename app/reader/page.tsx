@@ -22,6 +22,15 @@ function ReaderContent() {
     return 18;
   });
 
+  // Initialize font family from localStorage
+  const [fontFamily, setFontFamily] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedFont = localStorage.getItem('reader-font-family');
+      return savedFont || 'Garamond';
+    }
+    return 'Garamond';
+  });
+
   useEffect(() => {
     if (!id) {
       return;
@@ -76,6 +85,22 @@ function ReaderContent() {
     const newSize = Math.max(12, Math.min(32, fontSize + delta));
     setFontSize(newSize);
     localStorage.setItem('reader-font-size', String(newSize));
+  };
+
+  const handleFontFamilyChange = (font: string) => {
+    setFontFamily(font);
+    localStorage.setItem('reader-font-family', font);
+  };
+
+  // Map font names to CSS font stacks
+  const getFontStack = (font: string) => {
+    const fontStacks: { [key: string]: string } = {
+      'Garamond': 'Garamond, serif',
+      'Georgia': 'Georgia, serif',
+      'Palatino': 'Palatino, "Palatino Linotype", "Book Antiqua", serif',
+      'Iowan': 'Iowan Old Style, Palatino, "Palatino Linotype", "Book Antiqua", serif',
+    };
+    return fontStacks[font] || fontStacks['Garamond'];
   };
 
   // Process PRE blocks into chapters and extract chapter titles
@@ -170,27 +195,46 @@ function ReaderContent() {
     <div className="min-h-screen bg-white text-black">
       {/* Fixed header with controls */}
       <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-10">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="text-black hover:text-gray-600">
-            ← Back
-          </Link>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">Font Size:</span>
-            <button
-              onClick={() => handleFontSizeChange(-2)}
-              className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded"
-              aria-label="Decrease font size"
-            >
-              −
-            </button>
-            <span className="text-sm font-medium w-8 text-center">{fontSize}</span>
-            <button
-              onClick={() => handleFontSizeChange(2)}
-              className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded"
-              aria-label="Increase font size"
-            >
-              +
-            </button>
+        <div className="max-w-3xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between mb-3">
+            <Link href="/" className="text-black hover:text-gray-600">
+              ← Back
+            </Link>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">Font Size:</span>
+              <button
+                onClick={() => handleFontSizeChange(-2)}
+                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded"
+                aria-label="Decrease font size"
+              >
+                −
+              </button>
+              <span className="text-sm font-medium w-8 text-center">{fontSize}</span>
+              <button
+                onClick={() => handleFontSizeChange(2)}
+                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded"
+                aria-label="Increase font size"
+              >
+                +
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-sm text-gray-600">Font:</span>
+            {['Garamond', 'Georgia', 'Palatino', 'Iowan'].map((font) => (
+              <button
+                key={font}
+                onClick={() => handleFontFamilyChange(font)}
+                className={`px-3 py-1 text-sm rounded transition-colors ${
+                  fontFamily === font
+                    ? 'bg-black text-white'
+                    : 'bg-gray-100 hover:bg-gray-200 text-black'
+                }`}
+                style={{ fontFamily: getFontStack(font) }}
+              >
+                {font}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -222,7 +266,7 @@ function ReaderContent() {
           <h1
             className="mb-4 font-bold leading-tight"
             style={{
-              fontFamily: 'Garamond, serif',
+              fontFamily: getFontStack(fontFamily),
               fontSize: `${fontSize * 2}px`,
             }}
           >
@@ -262,7 +306,7 @@ function ReaderContent() {
           <div
             className="prose max-w-none"
             style={{
-              fontFamily: 'Garamond, serif',
+              fontFamily: getFontStack(fontFamily),
               fontSize: `${fontSize}px`,
               lineHeight: '1.8',
             }}
