@@ -122,7 +122,11 @@ function ReaderContent() {
     const chapterPattern = /^(?:Chapter|Part)\s+\d+/i;
     
     const htmlContent = htmlWithPreChapters.replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, (match, pContent) => {
-      // Extract text content without HTML tags for checking
+      // Extract text content for chapter pattern matching
+      // SECURITY NOTE: This simple tag removal is intentionally used here because:
+      // 1. The extracted textContent is ONLY used for regex pattern matching (never rendered)
+      // 2. The actual pContent that gets rendered goes through DOMPurify sanitization
+      // 3. This code is for content navigation, not content sanitization
       const textContent = pContent.replace(/<[^>]*>/g, '').trim();
       const chapterMatch = textContent.match(chapterPattern);
       
