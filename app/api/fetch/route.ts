@@ -132,19 +132,11 @@ on multiple lines.
       <h2>The Benefits of Reading</h2>
       <p>Reading provides numerous cognitive benefits. It improves vocabulary, enhances focus, reduces stress, and expands knowledge. Whether you're reading fiction or non-fiction, the act of reading stimulates your brain and keeps it active.</p>
       
-      <pre>
-Chapter Two: The Middle
-Chapter two begins here.
-This is also a multi-line chapter
-that needs text reflow.
-
-Another paragraph in chapter two
-with text that flows
-across multiple lines
-smoothly.
-      </pre>
+      <p>Chapter 2: Paragraph-Based Chapter Detection - This is a test of the new paragraph-based chapter detection feature. This text starts with "Chapter 2" and should be automatically detected as a chapter, creating a navigation entry in the sidebar. This demonstrates how the reader can now detect chapters even when they're not in PRE-formatted blocks.</p>
       
       <p>Studies have shown that regular reading can improve memory, analytical thinking, and even empathy. When we read stories, we experience different perspectives and emotions, which helps us understand others better.</p>
+      
+      <p>part 3: Case Insensitivity Test - This paragraph starts with "part" in lowercase, which should still be detected as a chapter since the pattern matching is case-insensitive. This ensures flexibility in how content authors format their chapter headings.</p>
       
       <h2>Reader Mode Features</h2>
       <p>This reader mode is designed to provide a comfortable reading experience:</p>
@@ -155,11 +147,14 @@ smoothly.
         <li>Black text on white background for optimal contrast</li>
         <li>Automatic position saving to resume where you left off</li>
         <li>Chapter navigation for PRE-formatted content</li>
+        <li>Smart chapter detection in regular paragraphs</li>
       </ul>
       
+      <p>CHAPTER 4: All Caps Test - Testing chapter detection with all capital letters. This should work just as well as mixed case, demonstrating the robustness of the case-insensitive pattern matching.</p>
+      
       <pre>
-Chapter Three: The End
-The final chapter.
+Chapter Five: PRE Block Chapter
+The final PRE-formatted chapter.
 Short and sweet.
 
 With a second paragraph
@@ -173,6 +168,8 @@ working correctly.
       
       <h2>How to Use</h2>
       <p>To use this reader, simply enter a URL on the home page. The system will fetch the content, extract the main article, and present it in this clean format. You can adjust the font size using the controls at the top of the page.</p>
+      
+      <p>Part 6: Mixed Content Navigation - This demonstrates that both PRE-formatted chapters and paragraph-based chapters can coexist in the same document. The chapter navigation sidebar will display all detected chapters in the order they appear, regardless of their formatting style.</p>
       
       <p>Your reading position is automatically saved in your browser's local storage, so you can always pick up where you left off when you return to an article.</p>
       

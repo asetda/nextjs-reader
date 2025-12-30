@@ -88,7 +88,7 @@ function ReaderContent() {
     let chapterIndex = 0;
     
     // Process <pre> blocks into chapters
-    const htmlContent = content.content.replace(/<pre\b[^>]*>([\s\S]*?)<\/pre>/gi, (match, preContent) => {
+    let htmlContent = content.content.replace(/<pre\b[^>]*>([\s\S]*?)<\/pre>/gi, (match, preContent) => {
       chapterIndex++;
       const chapterId = `chapter-${chapterIndex}`;
       
@@ -115,6 +115,33 @@ function ReaderContent() {
       
       // Wrap in a chapter div with ID for navigation (use className for React)
       return `<div className="chapter" id="${chapterId}"><h2>${chapterTitle}</h2><p>${processedPre}</p></div>`;
+    });
+    
+    // Process paragraphs for chapter detection (case-insensitive patterns)
+    // Pattern matches: "Chapter N", "Part N", "Chapter N:", "Part N:", etc.
+    const chapterPattern = /^(Chapter|Part)\s+(\d+)/i;
+    
+    htmlContent = htmlContent.replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, (match, pContent) => {
+      // Extract text content without HTML tags for checking
+      const textContent = pContent.replace(/<[^>]*>/g, '').trim();
+      const chapterMatch = textContent.match(chapterPattern);
+      
+      if (chapterMatch) {
+        chapterIndex++;
+        const chapterId = `chapter-${chapterIndex}`;
+        
+        // Extract chapter title (up to MAX_CHAPTER_TITLE_LENGTH)
+        const titleText = textContent.substring(0, Math.min(textContent.length, MAX_CHAPTER_TITLE_LENGTH));
+        const chapterTitle = titleText.length < textContent.length ? `${titleText}...` : titleText;
+        
+        chapterList.push({ id: chapterId, title: chapterTitle });
+        
+        // Wrap paragraph with chapter div and ID
+        return `<div className="chapter" id="${chapterId}"><p>${pContent}</p></div>`;
+      }
+      
+      // Return unchanged if not a chapter
+      return match;
     });
     
     return { processedContent: htmlContent, chapters: chapterList };
