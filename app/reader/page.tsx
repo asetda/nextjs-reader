@@ -119,7 +119,7 @@ function ReaderContent() {
     
     // Process paragraphs for chapter detection (case-insensitive patterns)
     // Pattern matches: "Chapter N", "Part N", "Chapter N:", "Part N:", etc.
-    const chapterPattern = /^(Chapter|Part)\s+\d+/i;
+    const chapterPattern = /^(?:Chapter|Part)\s+\d+/i;
     
     const htmlContent = htmlWithPreChapters.replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, (match, pContent) => {
       // Extract text content without HTML tags for checking
@@ -131,7 +131,7 @@ function ReaderContent() {
         const chapterId = `chapter-${chapterIndex}`;
         
         // Extract chapter title (up to MAX_CHAPTER_TITLE_LENGTH)
-        const titleText = textContent.substring(0, Math.min(textContent.length, MAX_CHAPTER_TITLE_LENGTH));
+        const titleText = textContent.substring(0, MAX_CHAPTER_TITLE_LENGTH);
         const chapterTitle = titleText.length < textContent.length ? `${titleText}...` : titleText;
         
         chapterList.push({ id: chapterId, title: chapterTitle });
