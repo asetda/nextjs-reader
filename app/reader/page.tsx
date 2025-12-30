@@ -88,7 +88,7 @@ function ReaderContent() {
     let chapterIndex = 0;
     
     // Process <pre> blocks into chapters
-    let htmlContent = content.content.replace(/<pre\b[^>]*>([\s\S]*?)<\/pre>/gi, (match, preContent) => {
+    const htmlWithPreChapters = content.content.replace(/<pre\b[^>]*>([\s\S]*?)<\/pre>/gi, (match, preContent) => {
       chapterIndex++;
       const chapterId = `chapter-${chapterIndex}`;
       
@@ -119,9 +119,9 @@ function ReaderContent() {
     
     // Process paragraphs for chapter detection (case-insensitive patterns)
     // Pattern matches: "Chapter N", "Part N", "Chapter N:", "Part N:", etc.
-    const chapterPattern = /^(Chapter|Part)\s+(\d+)/i;
+    const chapterPattern = /^(Chapter|Part)\s+\d+/i;
     
-    htmlContent = htmlContent.replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, (match, pContent) => {
+    const htmlContent = htmlWithPreChapters.replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, (match, pContent) => {
       // Extract text content without HTML tags for checking
       const textContent = pContent.replace(/<[^>]*>/g, '').trim();
       const chapterMatch = textContent.match(chapterPattern);
