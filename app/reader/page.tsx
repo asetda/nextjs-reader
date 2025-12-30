@@ -111,7 +111,7 @@ function ReaderContent() {
         // Replace multiple spaces with single space
         .replace(/  +/g, ' ')
         // Convert paragraph breaks back to HTML
-        .replace(new RegExp(PARAGRAPH_BREAK_PLACEHOLDER, 'g'), '</p><p>');
+        .replace(new RegExp(PARAGRAPH_BREAK_PLACEHOLDER, 'g'), '</p><br/><br/><p>');
       
       // Wrap in a chapter div with ID for navigation (use className for React)
       return `<div className="chapter" id="${chapterId}"><h2>${chapterTitle}</h2><p>${processedPre}</p></div>`;
