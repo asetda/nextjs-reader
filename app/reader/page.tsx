@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState, useMemo } from 'react';
+import { Suspense, useEffect, useState, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import DOMPurify from 'isomorphic-dompurify';
@@ -12,6 +12,7 @@ function ReaderContent() {
   const [content, setContent] = useState<{ url: string; title: string; content: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const detailsRef = useRef<HTMLDetailsElement>(null);
   
   // Initialize font size from localStorage
   const [fontSize, setFontSize] = useState(() => {
@@ -163,6 +164,11 @@ function ReaderContent() {
         top: offsetPosition,
         behavior: 'smooth',
       });
+      
+      // Close the mobile chapter menu after clicking
+      if (detailsRef.current) {
+        detailsRef.current.open = false;
+      }
     }
   };
 
@@ -241,16 +247,17 @@ function ReaderContent() {
           
           {/* Mobile chapter navigation */}
           {chapters.length > 0 && (
-            <details className="lg:hidden mb-6 border border-gray-200 rounded-lg">
-              <summary className="cursor-pointer px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg">
-                <span className="text-sm font-bold text-gray-700">Chapters ({chapters.length})</span>
+            <details ref={detailsRef} className="lg:hidden mb-6 border-2 border-gray-300 rounded-lg shadow-sm bg-white">
+              <summary className="cursor-pointer px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 rounded-lg transition-colors list-none flex items-center justify-between">
+                <span className="text-base font-bold text-gray-800">📖 Chapters ({chapters.length})</span>
+                <span className="text-gray-500 text-sm">Tap to expand</span>
               </summary>
-              <nav className="p-4 space-y-1">
+              <nav className="p-4 space-y-2 max-h-80 overflow-y-auto">
                 {chapters.map((chapter) => (
                   <button
                     key={chapter.id}
                     onClick={() => scrollToChapter(chapter.id)}
-                    className="block w-full text-left text-sm text-gray-600 hover:text-black hover:bg-gray-50 px-2 py-1 rounded transition-colors"
+                    className="block w-full text-left text-sm text-gray-700 hover:text-black hover:bg-blue-50 active:bg-blue-100 px-3 py-2 rounded-lg transition-colors border border-transparent hover:border-blue-200"
                   >
                     {chapter.title}
                   </button>
