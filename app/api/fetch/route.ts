@@ -4,6 +4,8 @@ import * as cheerio from 'cheerio';
 // Simple in-memory storage (in production, use a database)
 const storage = new Map<string, { url: string; title: string; content: string; timestamp: number }>();
 
+const MAX_STORED_PAGES = 10;
+
 function generateId(): string {
   return Math.random().toString(36).substring(2, 15);
 }
@@ -233,7 +235,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Store the content
+    // Store the content (remove existing entry for this URL if present)
+    for (const [existingId, existingData] of storage.entries()) {
+      if (existingData.url === url) {
+        storage.delete(existingId);
+        break;
+      }
+    }
+
     const id = generateId();
     storage.set(id, {
       url,
@@ -241,6 +250,15 @@ export async function POST(request: NextRequest) {
       content,
       timestamp: Date.now(),
     });
+
+    // Evict oldest entries if over the limit
+    if (storage.size > MAX_STORED_PAGES) {
+      const sorted = Array.from(storage.entries()).sort((a, b) => a[1].timestamp - b[1].timestamp);
+      const toRemove = storage.size - MAX_STORED_PAGES;
+      for (let i = 0; i < toRemove; i++) {
+        storage.delete(sorted[i][0]);
+      }
+    }
 
     return NextResponse.json({ id, title });
   } catch (error) {
@@ -257,7 +275,16 @@ export async function GET(request: NextRequest) {
   const id = searchParams.get('id');
 
   if (!id) {
-    return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+    // Return list of all stored pages, most recent first
+    const items = Array.from(storage.entries())
+      .map(([pageId, data]) => ({
+        id: pageId,
+        url: data.url,
+        title: data.title,
+        timestamp: data.timestamp,
+      }))
+      .sort((a, b) => b.timestamp - a.timestamp);
+    return NextResponse.json(items);
   }
 
   const data = storage.get(id);
@@ -267,4 +294,20 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json(data);
+}
+
+export async function DELETE(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const id = searchParams.get('id');
+
+  if (!id) {
+    return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+  }
+
+  if (!storage.has(id)) {
+    return NextResponse.json({ error: 'Content not found' }, { status: 404 });
+  }
+
+  storage.delete(id);
+  return NextResponse.json({ success: true });
 }

@@ -1,81 +1,38 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
-const RECENT_URLS_KEY = 'reader-recent-urls';
-const URL_TO_ID_KEY = 'reader-url-to-id';
-const MAX_RECENT_URLS = 10;
-
-// Helper function to get stored URLs from localStorage
-const getStoredUrls = (): string[] => {
-  if (typeof window === 'undefined') return [];
-  
-  const stored = localStorage.getItem(RECENT_URLS_KEY);
-  if (!stored) return [];
-  
-  try {
-    const parsed = JSON.parse(stored);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    // Ignore invalid JSON
-    return [];
-  }
-};
-
-// Helper function to get URL to ID mapping
-const getUrlToIdMapping = (): Record<string, string> => {
-  if (typeof window === 'undefined') return {};
-  
-  const stored = localStorage.getItem(URL_TO_ID_KEY);
-  if (!stored) return {};
-  
-  try {
-    const parsed = JSON.parse(stored);
-    return typeof parsed === 'object' && parsed !== null ? parsed : {};
-  } catch {
-    return {};
-  }
-};
-
-// Helper function to save URL to ID mapping
-const saveUrlToIdMapping = (url: string, id: string) => {
-  if (typeof window === 'undefined') return;
-  
-  const mapping = getUrlToIdMapping();
-  mapping[url] = id;
-  localStorage.setItem(URL_TO_ID_KEY, JSON.stringify(mapping));
-};
+interface StoredPage {
+  id: string;
+  url: string;
+  title: string;
+  timestamp: number;
+}
 
 export default function Home() {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [recentUrls, setRecentUrls] = useState<string[]>([]);
+  const [recentPages, setRecentPages] = useState<StoredPage[]>([]);
   const router = useRouter();
 
-  // Load recent URLs from localStorage on mount
-  useEffect(() => {
-    setRecentUrls(getStoredUrls());
+  const loadRecentPages = useCallback(async () => {
+    try {
+      const response = await fetch('/api/fetch');
+      if (response.ok) {
+        const data = await response.json();
+        setRecentPages(Array.isArray(data) ? data : []);
+      }
+    } catch {
+      // Ignore errors loading recent pages
+    }
   }, []);
 
-  const saveRecentUrl = (url: string) => {
-    if (typeof window !== 'undefined') {
-      let urls = getStoredUrls();
-
-      // Remove the URL if it already exists (to move it to the front)
-      urls = urls.filter(u => u !== url);
-      
-      // Add the new URL to the front
-      urls.unshift(url);
-      
-      // Keep only the last 10 URLs
-      urls = urls.slice(0, MAX_RECENT_URLS);
-      
-      localStorage.setItem(RECENT_URLS_KEY, JSON.stringify(urls));
-      setRecentUrls(urls);
-    }
-  };
+  // Load recent pages from server on mount
+  useEffect(() => {
+    loadRecentPages();
+  }, [loadRecentPages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,13 +53,8 @@ export default function Home() {
       }
 
       const data = await response.json();
-      
-      // Save URL to recent URLs
-      saveRecentUrl(url);
-      
-      // Save URL to ID mapping
-      saveUrlToIdMapping(url, data.id);
-      
+
+      await loadRecentPages();
       router.push(`/reader?id=${data.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -110,17 +62,21 @@ export default function Home() {
     }
   };
 
-  const handleRecentUrlClick = (recentUrl: string) => {
-    // Check if this URL has been previously downloaded
-    const mapping = getUrlToIdMapping();
-    const existingId = mapping[recentUrl];
-    
-    if (existingId) {
-      // Navigate directly to the reader with the saved ID
-      router.push(`/reader?id=${existingId}`);
-    } else {
-      // Fill the input field so user can fetch it
-      setUrl(recentUrl);
+  const handleRecentPageClick = (page: StoredPage) => {
+    router.push(`/reader?id=${page.id}`);
+  };
+
+  const handleDeletePage = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    try {
+      const response = await fetch(`/api/fetch?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        setRecentPages(prev => prev.filter(p => p.id !== id));
+      }
+    } catch {
+      // Ignore delete errors
     }
   };
 
@@ -148,20 +104,30 @@ export default function Home() {
             />
           </div>
 
-          {recentUrls.length > 0 && (
+          {recentPages.length > 0 && (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Recent URLs</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Recent Pages</h3>
               <div className="space-y-2">
-                {recentUrls.map((recentUrl) => (
-                  <button
-                    key={recentUrl}
-                    type="button"
-                    onClick={() => handleRecentUrlClick(recentUrl)}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors truncate"
-                    title={recentUrl}
-                  >
-                    {recentUrl}
-                  </button>
+                {recentPages.map((page) => (
+                  <div key={page.id} className="flex items-center group">
+                    <button
+                      type="button"
+                      onClick={() => handleRecentPageClick(page)}
+                      className="flex-1 text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors truncate"
+                      title={page.url}
+                    >
+                      {page.title}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeletePage(e, page.id)}
+                      className="ml-1 px-2 py-1 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
+                      title="Delete"
+                      aria-label={`Delete "${page.title}"`}
+                    >
+                      ✕
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
