@@ -4,7 +4,7 @@ import * as cheerio from 'cheerio';
 // Simple in-memory storage (in production, use a database)
 const storage = new Map<string, { url: string; title: string; content: string; timestamp: number }>();
 
-const MAX_STORED_PAGES = 10;
+const MAX_STORED_PAGES = 50;
 
 function generateId(): string {
   return Math.random().toString(36).substring(2, 15);
