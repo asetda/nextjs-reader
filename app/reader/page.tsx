@@ -14,7 +14,7 @@ const FONT_STACKS: { [key: string]: string } = {
 };
 
 const AVAILABLE_FONTS = ['Garamond', 'Georgia', 'Palatino', 'Iowan'] as const;
-const DEFAULT_FONT = 'Garamond';
+const DEFAULT_FONT = 'Iowan';
 
 function ReaderContent() {
   const searchParams = useSearchParams();
@@ -29,9 +29,9 @@ function ReaderContent() {
   const [fontSize, setFontSize] = useState(() => {
     if (typeof window !== 'undefined') {
       const savedFontSize = localStorage.getItem('reader-font-size');
-      return savedFontSize ? parseInt(savedFontSize, 10) : 18;
+      return savedFontSize ? parseInt(savedFontSize, 10) : 12;
     }
-    return 18;
+    return 12;
   });
 
   // Initialize font family from localStorage
