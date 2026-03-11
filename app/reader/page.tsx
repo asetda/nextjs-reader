@@ -29,9 +29,9 @@ function ReaderContent() {
   const [fontSize, setFontSize] = useState(() => {
     if (typeof window !== 'undefined') {
       const savedFontSize = localStorage.getItem('reader-font-size');
-      return savedFontSize ? parseInt(savedFontSize, 10) : 12;
+      return savedFontSize ? parseInt(savedFontSize, 10) : 14;
     }
-    return 12;
+    return 14;
   });
 
   // Initialize font family from localStorage
