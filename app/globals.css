@@ -25,6 +25,11 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Increase spacing between paragraphs so they are visually distinct from line spacing */
+.prose p {
+  margin-bottom: 1.5em;
+}
+
 /* Safari-specific fix for details element */
 details summary {
   display: flex;
