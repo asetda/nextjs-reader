@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
-
-// Simple in-memory storage (in production, use a database)
-const storage = new Map<string, { url: string; title: string; content: string; timestamp: number }>();
-
-const MAX_STORED_PAGES = 50;
-
-function generateId(): string {
-  return Math.random().toString(36).substring(2, 15);
-}
+import { storage, MAX_STORED_PAGES, generateId } from '@/app/lib/storage';
 
 // SSRF protection: Check if URL points to private/internal IP ranges
 function isPrivateIP(hostname: string): boolean {
