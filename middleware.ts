@@ -46,9 +46,11 @@ async function verifyToken(token: string): Promise<boolean> {
 }
 
 export async function middleware(request: NextRequest) {
-  // Allow access to login page and API endpoints
-  if (request.nextUrl.pathname === '/login' || 
-      request.nextUrl.pathname.startsWith('/api/auth')) {
+  // Allow access to login page, auth API endpoints, and the public open/view routes
+  if (request.nextUrl.pathname === '/login' ||
+      request.nextUrl.pathname.startsWith('/api/auth') ||
+      request.nextUrl.pathname.startsWith('/api/open') ||
+      request.nextUrl.pathname.startsWith('/view')) {
     return NextResponse.next();
   }
 
