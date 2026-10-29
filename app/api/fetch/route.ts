@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
 import { storage, MAX_STORED_PAGES, generateId } from '@/app/lib/storage';
+import { fetchRemotePage } from '@/app/lib/remote-fetch';
 
 // SSRF protection: Check if URL points to private/internal IP ranges
 function isPrivateIP(hostname: string): boolean {
@@ -201,7 +202,7 @@ export async function POST(request: NextRequest) {
     } else {
       try {
         // Fetch the URL
-        const response = await fetch(url, {
+        const response = await fetchRemotePage(url, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (compatible; Reader/1.0)',
           },
